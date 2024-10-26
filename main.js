@@ -11,13 +11,11 @@ class MainMenu extends Phaser.Scene
             }
 
             this.paddle.x = game.input.mousePointer.x;
-        }
 
-        initVars() {
-            this.isRunning = false;
-            this.brickObjects = [];
-            this.brickData = {};
-            this.brickColors = ['red','blue','green','purple','silver','yellow'];
+            if(this.ball.y > CANVAS_SIZE.height + 100) {
+                this.isRunning = false;
+                this.gameOver();
+            }
         }
 
         init() {
@@ -37,10 +35,70 @@ class MainMenu extends Phaser.Scene
 
         create ()
         {
+            this.addWorldInteractions();
             const sky = this.add.image(0, 0, 'sky');
             sky.setOrigin(0, 0);
             this.addTitle();
             this.addStartButton();
+        }
+
+        initVars() {
+            this.timer;
+            this.retryLabel;
+            this.gameOverLabel;
+            this.isRunning = false;
+            this.brickObjects = [];
+            this.brickData = {};
+            this.brickColors = ['red','blue','green','purple','silver','yellow'];
+        }
+
+        gameOver() {
+            this.ball.disableBody(true, true);
+            this.paddle.disableBody(true, true);
+            this.showGameOver();
+            this.removeBricks();
+        }
+
+        cleanup() {
+            this.gameOverLabel.destroy();
+            this.retryLabel.destroy();
+            this.removeAllBricks();
+        }
+
+        showGameOver() {
+            const x = CANVAS_SIZE.width / 2;
+            const gameOver = this.add.text(x, 50, 'Game Over',
+                {   fontFamily: 'Plaza-Bold', 
+                    fontSize: 100,
+                    color: '#00FFFF' 
+                });
+            gameOver.setOrigin(0.5, 0.5);
+            this.tweens.add({
+                targets: gameOver,
+                y: CANVAS_SIZE.height / 2,
+                ease: 'Power1',
+                duration: 2000
+            });
+
+            const retry = this.add.text(x, CANVAS_SIZE.height, 'Restart', {
+                fontSize: 50,
+                color: '#FFFFFF' 
+            });
+            retry.on('pointerup', () => {
+                this.cleanup();
+                this.init();
+                this.create();
+            });
+            retry.setInteractive();
+            retry.setOrigin(0.5, 0.5);
+            this.tweens.add({
+                targets: retry,
+                y: CANVAS_SIZE.height - 150,
+                ease: 'Power1',
+                duration: 2000
+            });
+            this.retryLabel = retry;
+            this.gameOverLabel = gameOver;
         }
 
         startGame() {
@@ -144,6 +202,30 @@ class MainMenu extends Phaser.Scene
             }
         }
 
+        removeBricks() {
+            const repeatCount = this.brickObjects.length - 1;
+            this.timer = this.time.addEvent({repeat: repeatCount, delay: 150, callback: () => {
+                this.removeRandomBrick();
+            }});
+        }
+
+        removeAllBricks() {
+            this.timer.destroy();
+            for(var x = 0; x < this.brickObjects.length; x++) {
+                const brick = this.brickObjects[x];
+                brick.disableBody(true, true);
+            }
+            this.brickObjects = [];
+            this.brickData = [];
+        }
+
+        removeRandomBrick() {
+            const index = Phaser.Math.Between(0, this.brickObjects.length - 1);
+            const brick = this.brickObjects[index];
+            brick.disableBody(true, true);
+            this.brickObjects.splice(index, 1);
+        }
+
         addBrick(x, y, name) {
             const width = 64;
             const height = 32;
@@ -180,6 +262,10 @@ class MainMenu extends Phaser.Scene
             ball.setCollideWorldBounds(true);
             particles.startFollow(ball);
             this.ball = ball;
+        }
+
+        addWorldInteractions() {
+            this.physics.world.setBoundsCollision(true, true, true, false);
         }
     }
 
