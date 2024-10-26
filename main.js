@@ -46,6 +46,9 @@ class MainMenu extends Phaser.Scene
             this.timer;
             this.retryLabel;
             this.gameOverLabel;
+            this.particles;
+            this.title;
+            this.startButton;
             this.isRunning = false;
             this.brickObjects = [];
             this.brickData = {};
@@ -226,6 +229,48 @@ class MainMenu extends Phaser.Scene
             this.brickObjects.splice(index, 1);
         }
 
+        gameWin() {
+            this.isRunning = false;
+            this.particles.destroy();
+            this.paddle.disableBody(true, true);
+            this.ball.disableBody(true, true);
+            const x = CANVAS_SIZE.width / 2;
+            const winText = this.add.text(x, 50, 'You Won!',
+                {   fontFamily: 'Plaza-Bold', 
+                    fontSize: 100,
+                    color: '#00FFFF' 
+                });
+            winText.setOrigin(0.5, 0.5);
+            this.tweens.add({
+                targets: winText,
+                y: CANVAS_SIZE.height / 2,
+                ease: 'Power1',
+                duration: 2000
+            });
+
+            const retry = this.add.text(x, CANVAS_SIZE.height, 'Restart', {
+                fontSize: 50,
+                color: '#FFFFFF' 
+            });
+            retry.on('pointerup', () => {
+                this.gameOverLabel.destroy();
+                this.retryLabel.destroy();
+                this.init();
+                this.create();
+            });
+            retry.setInteractive();
+            retry.setOrigin(0.5, 0);
+            this.tweens.add({
+                targets: retry,
+                y: CANVAS_SIZE.height - 150,
+                ease: 'Power1',
+                duration: 2000
+            });
+
+            this.retryLabel = retry;
+            this.gameOverLabel = winText;
+        }
+
         addBrick(x, y, name) {
             const width = 64;
             const height = 32;
@@ -243,7 +288,7 @@ class MainMenu extends Phaser.Scene
                 brick.disableBody(true, true);
                 const length = this.brickObjects.length;
                 if(length == 0) {
-                    console.log('you won!');
+                    this.gameWin();
                 }
             };
         }
@@ -255,17 +300,25 @@ class MainMenu extends Phaser.Scene
                 blendMode: 'ADD',
                 lifespan: 250,
             });
-
             const ball = this.physics.add.image(CANVAS_SIZE.width / 2, CANVAS_SIZE.height - 60, 'ballRed');
             ball.setVelocity(500, 500);
             ball.setBounce(1, 1);
             ball.setCollideWorldBounds(true);
             particles.startFollow(ball);
             this.ball = ball;
+            this.particles = particles;
         }
 
         addWorldInteractions() {
             this.physics.world.setBoundsCollision(true, true, true, false);
+        }
+
+        dropdownLabel(string) {
+            
+        }
+
+        riseUpButton(string, func) {
+
         }
     }
 
