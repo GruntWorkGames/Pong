@@ -1,5 +1,3 @@
-
-
 const CANVAS_SIZE = {
     width: 800,
     height: 600
@@ -7,30 +5,19 @@ const CANVAS_SIZE = {
 
 class MainMenu extends Phaser.Scene
     {
+        update(time, delta) {
+            if(!this.isRunning) {
+                return;
+            }
+
+            this.paddle.x = game.input.mousePointer.x;
+        }
+
         initVars() {
+            this.isRunning = false;
             this.brickObjects = [];
             this.brickData = {};
             this.brickColors = ['red','blue','green','purple','silver','yellow'];
-        }
-
-        buildBrickData() {
-            this.brickColors.forEach((color, index)=>{
-                const filepath = `assets/${color}1.png`;
-                const filepath2 = `assets/${color}2.png`;
-                const name = `${color}1`;
-                const name2 = `${color}2`;
-                this.brickData[name] = filepath;
-                this.brickData[name2] = filepath2;
-            });
-        }
-
-        preloadBricks() {
-            const objects = Object.values(this.brickData);
-            const keys = Object.keys(this.brickData);
-            objects.forEach((filename, index, _) => {
-                const name = keys[index];
-                this.load.image(name, filename);
-            });
         }
 
         init() {
@@ -44,44 +31,54 @@ class MainMenu extends Phaser.Scene
             this.load.image('sky', 'assets/space3.png');
             this.load.image('red', 'assets/red.png');
             this.load.image('ballRed', 'assets/orb-red.png');
+            this.load.image('paddle', 'assets/paddle2.png');
             this.preloadBricks();
         }
 
         create ()
         {
-            this.add.image(400, 300, 'sky');
+            const sky = this.add.image(0, 0, 'sky');
+            sky.setOrigin(0, 0);
+            this.addTitle();
+            this.addStartButton();
+        }
+
+        startGame() {
+            this.removeStartButton();
+            this.removeTitle();
+
             this.addBall();
-            const pos = {x: CANVAS_SIZE.width / 2, y: 0};
-            const title = this.add.text(pos.x, pos.y, 'Breakout',
-                {   fontFamily: 'Plaza-Bold', 
-                    fontSize: 100,
-                    color: '#00FFFF' 
-                });
-            title.setOrigin(0.5,0.5);
-                
-            this.tweens.add({
-                targets: title,
-                y: CANVAS_SIZE.height - 250,
-                ease: 'Power1',
-                duration: 2000
-            });
-
-            const startBtn = this.add.text(title.x, CANVAS_SIZE.height, 'Start', {
-                fontSize: 50
-            });
-            startBtn.setOrigin(0.5,0);
-            startBtn.setInteractive();
-            startBtn.on('pointerup', () => {
-                console.log('clicked text object');
-            });
-            this.tweens.add({
-                targets: startBtn,
-                y: CANVAS_SIZE.height - 150,
-                ease: 'Power1',
-                duration: 2000
-            });
-
             this.addBricks();
+            this.addPaddle();
+
+            this.isRunning = true;
+        }
+
+        buildBrickData() {
+            this.brickColors.forEach((color)=>{
+                const filepath = `assets/${color}1.png`;
+                const filepath2 = `assets/${color}2.png`;
+                const name = `${color}1`;
+                const name2 = `${color}2`;
+                this.brickData[name] = filepath;
+                this.brickData[name2] = filepath2;
+            });
+        }
+
+        preloadBricks() {
+            const objects = Object.values(this.brickData);
+            const keys = Object.keys(this.brickData);
+            objects.forEach((filename, index) => {
+                const name = keys[index];
+                this.load.image(name, filename);
+            });
+        }
+
+        addPaddle() {
+            this.paddle = this.physics.add.image(CANVAS_SIZE.width / 2, CANVAS_SIZE.height - 30, 'paddle');
+            this.paddle.setPushable(false);
+            this.paddle.setCollideWorldBounds(true);
+            const collider = this.physics.add.collider(this.paddle, this.ball, (o1 ,o2)=>{ });
         }
 
         addCustomFont() {
@@ -92,11 +89,55 @@ class MainMenu extends Phaser.Scene
             sheet.insertRule(styles, 0);
         }
 
+        addStartButton() {
+            const startBtn = this.add.text( CANVAS_SIZE.width / 2, CANVAS_SIZE.height, 'Start', {
+                fontSize: 50
+            });
+            startBtn.setOrigin(0.5,0);
+            startBtn.setInteractive();
+            startBtn.on('pointerup', () => {
+                this.startGame();
+            });
+            this.tweens.add({
+                targets: startBtn,
+                y: CANVAS_SIZE.height - 150,
+                ease: 'Power1',
+                duration: 2000
+            });
+            this.startButton = startBtn;
+        }
+
+        addTitle() {
+            const pos = {x: CANVAS_SIZE.width / 2, y: 0};
+            const title = this.add.text(pos.x, pos.y, 'Breakout',
+                {   fontFamily: 'Plaza-Bold', 
+                    fontSize: 100,
+                    color: '#00FFFF' 
+                });
+            title.setOrigin(0.5, 0.5);
+                
+            this.tweens.add({
+                targets: title,
+                y: CANVAS_SIZE.height - 250,
+                ease: 'Power1',
+                duration: 2000
+            });
+            this.title = title;
+        }
+
+        removeTitle() {
+            this.title.destroy();
+        }
+
+        removeStartButton() {
+            this.startButton.destroy();
+        }
+
         addBricks() {
-            for(var x=0;x<12;x++) {
-                for(var y=0;y<5;y++){
+            for(var x = 0; x < 12; x++) {
+                for(var y = 0; y < 5; y++){
                     const bricks = Object.keys(this.brickData);
-                    const rand = Phaser.Math.Between(0, bricks.length-1);
+                    const rand = Phaser.Math.Between(0, bricks.length - 1);
                     const name = bricks[rand];
                     this.addBrick(x, y, name);
                 }
@@ -109,8 +150,8 @@ class MainMenu extends Phaser.Scene
             const brick = this.physics.add.image(x * width, y * height, name);
             brick.x += 15;
             brick.y += 15;
-            brick.setOrigin(0,0);
-            brick.setGravity(0,0);
+            brick.setOrigin(0, 0);
+            brick.setGravity(0, 0);
             brick.setImmovable(true);
             const collider = this.physics.add.collider(brick, this.ball);
             this.brickObjects.push(brick);
@@ -133,7 +174,7 @@ class MainMenu extends Phaser.Scene
                 lifespan: 250,
             });
 
-            const ball = this.physics.add.image(CANVAS_SIZE.width/2, CANVAS_SIZE.height - 60, 'ballRed');
+            const ball = this.physics.add.image(CANVAS_SIZE.width / 2, CANVAS_SIZE.height - 60, 'ballRed');
             ball.setVelocity(500, 500);
             ball.setBounce(1, 1);
             ball.setCollideWorldBounds(true);
