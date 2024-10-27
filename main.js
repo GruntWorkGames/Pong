@@ -1,4 +1,4 @@
-var CANVAS_SIZE = {width: 800, height: 600};
+const CANVAS_SIZE = {width: 800, height: 600};
 
 class MainMenu extends Phaser.Scene {
     
