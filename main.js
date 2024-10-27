@@ -25,8 +25,8 @@ class MainMenu extends Phaser.Scene
             this.addWorldInteractions();
             const sky = this.add.image(0, 0, 'sky');
             sky.setOrigin(0, 0);
-            this.addTitle();
-            this.addStartButton();
+            this.showTopLabel('Breakout');
+            this.showButton('START', () => {this.startGame();});
         }
 
         update(time, delta) {
@@ -43,12 +43,10 @@ class MainMenu extends Phaser.Scene
         }
 
         initVars() {
+            this.topLabel;
+            this.button;
             this.timer;
-            this.retryLabel;
-            this.gameOverLabel;
             this.particles;
-            this.title;
-            this.startButton;
             this.isRunning = false;
             this.brickObjects = [];
             this.brickData = {};
@@ -62,52 +60,27 @@ class MainMenu extends Phaser.Scene
             this.removeBricks();
         }
 
+        clearLabels() {
+            this.topLabel.destroy();
+            this.button.destroy();
+        }
+        
         cleanup() {
-            this.gameOverLabel.destroy();
-            this.retryLabel.destroy();
             this.removeAllBricks();
         }
 
         showGameOver() {
-            const x = CANVAS_SIZE.width / 2;
-            const gameOver = this.add.text(x, 50, 'Game Over',
-                {   fontFamily: 'Plaza-Bold', 
-                    fontSize: 100,
-                    color: '#00FFFF' 
-                });
-            gameOver.setOrigin(0.5, 0.5);
-            this.tweens.add({
-                targets: gameOver,
-                y: CANVAS_SIZE.height / 2,
-                ease: 'Power1',
-                duration: 2000
-            });
-
-            const retry = this.add.text(x, CANVAS_SIZE.height, 'Restart', {
-                fontSize: 50,
-                color: '#FFFFFF' 
-            });
-            retry.on('pointerup', () => {
+            this.showTopLabel('Game Over');
+            this.showButton('Reset', () => {
                 this.cleanup();
+                this.clearLabels();
                 this.init();
                 this.create();
             });
-            retry.setInteractive();
-            retry.setOrigin(0.5, 0.5);
-            this.tweens.add({
-                targets: retry,
-                y: CANVAS_SIZE.height - 150,
-                ease: 'Power1',
-                duration: 2000
-            });
-            this.retryLabel = retry;
-            this.gameOverLabel = gameOver;
         }
 
         startGame() {
-            this.removeStartButton();
-            this.removeTitle();
-
+            this.clearLabels();
             this.addBall();
             this.addBricks();
             this.addPaddle();
@@ -150,50 +123,6 @@ class MainMenu extends Phaser.Scene
             sheet.insertRule(styles, 0);
         }
 
-        addStartButton() {
-            const startBtn = this.add.text( CANVAS_SIZE.width / 2, CANVAS_SIZE.height, 'Start', {
-                fontSize: 50
-            });
-            startBtn.setOrigin(0.5,0);
-            startBtn.setInteractive();
-            startBtn.on('pointerup', () => {
-                this.startGame();
-            });
-            this.tweens.add({
-                targets: startBtn,
-                y: CANVAS_SIZE.height - 150,
-                ease: 'Power1',
-                duration: 2000
-            });
-            this.startButton = startBtn;
-        }
-
-        addTitle() {
-            const pos = {x: CANVAS_SIZE.width / 2, y: 0};
-            const title = this.add.text(pos.x, pos.y, 'Breakout',
-                {   fontFamily: 'Plaza-Bold', 
-                    fontSize: 100,
-                    color: '#00FFFF' 
-                });
-            title.setOrigin(0.5, 0.5);
-                
-            this.tweens.add({
-                targets: title,
-                y: CANVAS_SIZE.height - 250,
-                ease: 'Power1',
-                duration: 2000
-            });
-            this.title = title;
-        }
-
-        removeTitle() {
-            this.title.destroy();
-        }
-
-        removeStartButton() {
-            this.startButton.destroy();
-        }
-
         addBricks() {
             for(var x = 0; x < 12; x++) {
                 for(var y = 0; y < 5; y++){
@@ -234,41 +163,12 @@ class MainMenu extends Phaser.Scene
             this.particles.destroy();
             this.paddle.disableBody(true, true);
             this.ball.disableBody(true, true);
-            const x = CANVAS_SIZE.width / 2;
-            const winText = this.add.text(x, 50, 'You Won!',
-                {   fontFamily: 'Plaza-Bold', 
-                    fontSize: 100,
-                    color: '#00FFFF' 
-                });
-            winText.setOrigin(0.5, 0.5);
-            this.tweens.add({
-                targets: winText,
-                y: CANVAS_SIZE.height / 2,
-                ease: 'Power1',
-                duration: 2000
-            });
-
-            const retry = this.add.text(x, CANVAS_SIZE.height, 'Restart', {
-                fontSize: 50,
-                color: '#FFFFFF' 
-            });
-            retry.on('pointerup', () => {
-                this.gameOverLabel.destroy();
-                this.retryLabel.destroy();
+            this.showTopLabel('YOU WON!');
+            this.showButton('RESET', () => {
+                this.clearLabels();
                 this.init();
                 this.create();
             });
-            retry.setInteractive();
-            retry.setOrigin(0.5, 0);
-            this.tweens.add({
-                targets: retry,
-                y: CANVAS_SIZE.height - 150,
-                ease: 'Power1',
-                duration: 2000
-            });
-
-            this.retryLabel = retry;
-            this.gameOverLabel = winText;
         }
 
         addBrick(x, y, name) {
@@ -313,12 +213,40 @@ class MainMenu extends Phaser.Scene
             this.physics.world.setBoundsCollision(true, true, true, false);
         }
 
-        dropdownLabel(string) {
-            
+        showTopLabel(textString) {
+            const pos = {x: CANVAS_SIZE.width / 2, y: 0};
+            const label = this.add.text(pos.x, pos.y, textString,
+                {   fontFamily: 'Plaza-Bold', 
+                    fontSize: 100,
+                    color: '#00FFFF' 
+                });
+            label.setOrigin(0.5, 0.5);
+            this.tweens.add({
+                targets: label,
+                y: CANVAS_SIZE.height - 250,
+                ease: 'Power1',
+                duration: 2000
+            });
+            this.topLabel = label;
         }
 
-        riseUpButton(string, func) {
-
+        showButton(textString, func) {
+            const button = this.add.text( CANVAS_SIZE.width / 2, CANVAS_SIZE.height, textString, {
+                fontSize: 50
+            });
+            button.setOrigin(0.5,0);
+            button.setInteractive();
+            button.on('pointerup', () => {
+                // this.startGame();
+                func();
+            });
+            this.tweens.add({
+                targets: button,
+                y: CANVAS_SIZE.height - 150,
+                ease: 'Power1',
+                duration: 2000
+            });
+            this.button = button;
         }
     }
 
