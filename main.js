@@ -1,11 +1,18 @@
-const CANVAS_SIZE = {
-    width: 800,
-    height: 600
-}
+var CANVAS_SIZE = {width: 800, height: 600};
 
 class MainMenu extends Phaser.Scene {
+    
+    topLabel = null;
+    button = null;
+    timer = null;
+    particles = null;
+    isRunning = false;
+    brickObjects = [];
+    brickData = {}; // { name : string, filepath : string}
+    loadingProgress = 0.0;
+    brickColors = ['red', 'blue', 'green', 'purple', 'silver', 'yellow'];
+
     init() {
-        this.initVars();
         this.addCustomFont();
         this.buildBrickData();
     }
@@ -31,23 +38,13 @@ class MainMenu extends Phaser.Scene {
             return;
         }
 
-        this.paddle.x = game.input.mousePointer.x;
+        const pointer = this.input.activePointer;
+        this.paddle.x = pointer.x;
 
         if (this.ball.y > CANVAS_SIZE.height + 100) {
             this.isRunning = false;
             this.gameOver();
         }
-    }
-
-    initVars() {
-        this.topLabel;
-        this.button;
-        this.timer;
-        this.particles;
-        this.isRunning = false;
-        this.brickObjects = [];
-        this.brickData = {};
-        this.brickColors = ['red', 'blue', 'green', 'purple', 'silver', 'yellow'];
     }
 
     gameOver() {
