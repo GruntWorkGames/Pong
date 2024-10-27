@@ -237,7 +237,6 @@ class MainMenu extends Phaser.Scene
             button.setOrigin(0.5,0);
             button.setInteractive();
             button.on('pointerup', () => {
-                // this.startGame();
                 func();
             });
             this.tweens.add({
